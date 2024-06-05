@@ -7,30 +7,35 @@
 const std = @import("std");
 const builtin = @import("builtin");
 
+pub fn assert(ok:bool) void {
+  if (!ok) unreachable;
+}
+pub fn expect(ok:bool) !void {
+  if (!ok) return error.TestUnexpectedResult;
+}
+
+const print = &std.debug.print;
+
 /// backend can support
 pub const backend = struct{
-
   /// | - native c/llvm vectors?
   pub const supportsVectors = switch (builtin.zig_backend) {
     .stage2_llvm, .stage2_c => true,
     else => false
   };
-  
   /// | - equal bytes?
   pub const eqlBytes = switch (builtin.zig_backend) {
     .stage2_spirv64 => false,
     else => true
   };
-
   /// | - can print to console?
   pub const canPrint = builtin.zig_backend != .stage2_spirv64;
 };
 
-
 /// Can find a given element within an array and return an index of that item.
-pub inline fn find(comptime T:type, lit:[]T, ch:T, rev:?bool) usize {
+pub inline fn find(lit:anytype, ch:anytype, rev:bool) usize {
   var i:usize = undefined;
-  if (rev == true) {
+  if (rev) {
     i = lit.len - 1;
     while (i > 0) : (i -= 1) {
       if (lit[i] != ch) continue;
@@ -38,7 +43,6 @@ pub inline fn find(comptime T:type, lit:[]T, ch:T, rev:?bool) usize {
     }
     return 0;
   }
-
   i = 0;
   while (i < lit.len) : (i += 1) {
     if (lit[i] != ch) continue;
@@ -52,7 +56,7 @@ pub inline fn find(comptime T:type, lit:[]T, ch:T, rev:?bool) usize {
 /// Moore
 /// Horspool
 /// PreProcess
-pub inline fn BMHPP(pattern:[]const u8, table:*[256]usize, rev:?bool) void {
+pub inline fn BMHPP(pattern:[]const u8, table:*[256]usize, rev:bool) void {
   for (table) |*c| {
     c.* = pattern.len;
   }
@@ -71,6 +75,8 @@ pub inline fn BMHPP(pattern:[]const u8, table:*[256]usize, rev:?bool) void {
     table[pattern[i]] = (pattern.len - 1) - i;
   }
 }
+
+
 
 
 // TODO: YET TO BE IMPLIMENTED
@@ -96,6 +102,4 @@ pub const indexi = struct{
       };
     }
   }
-
-
 };
